@@ -1,0 +1,7 @@
+sqlalchemy 
+matplotlib  
+numpy
+pandas
+requests
+pillow
+image
