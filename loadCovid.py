@@ -82,13 +82,13 @@ def loadData(data, sql, conn=pg):
         r = conn.execute(sql)
         print([d for d in r])  
             
-def loadDataPath(path, conn=pg):
-    print(f"\nLoading data from {path}")
+def loadDataPath(file, conn=pg):
+    print(f"\nLoading data from {file}")
     last = sqlExecute(pg, LAST_UPDATE)[0]
-    for file in os.listdir(path):
-        if file[-4:]=='.csv': # and file[:-4]>last[0].strftime('%m-%d-%Y'):
-            #ddf = pd.read_csv(os.path.join(path, file))
-            insertFile(os.path.join(path, file), conn)
+    # for file in os.listdir(path):
+    #     if file[-4:]=='.csv': # and file[:-4]>last[0].strftime('%m-%d-%Y'):
+    #         #ddf = pd.read_csv(os.path.join(path, file))
+    insertFile( file, conn)
             # with open(os.path.join(path, file), 'rb') as ft:
             #     l = ft.readline()
             #     loadData(f"{path}\{file}", LOADLOCAL('daily', GET_COLUMNS(l), os.path.join(path, file)), conn)
@@ -132,6 +132,8 @@ create table daily
     lat           double precision,
     lng           double precision,
     confirmed     bigint,
+    probableconfirmed bigint,
+    probabledeaths bigint,
     deaths        bigint,
     recovered     bigint,
     active        bigint,
@@ -152,7 +154,7 @@ create table daily
 
 if __name__=="__main__":
     loadDataPath(covidPath, pg)
-    [lookupCoords(i) for i in getNewPlaces()]
+    # [lookupCoords(i) for i in getNewPlaces()]
 
     
     #loadData('StationEntrances.csv', COPY('stationEntrances'), pg)

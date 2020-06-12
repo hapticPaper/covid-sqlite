@@ -27,7 +27,7 @@ UPDATE daily SET combinedkey = replace(replace(case
   """
 
 NEW_PLACES = """
-  SELECT combinedkey
+  SELECT distinct combinedkey
   FROM keycoords
   WHERE lng is null or lat is null"""
 
@@ -60,14 +60,15 @@ HEADER TRUE)
 """
 
 def DAILY_UPDATE(datey): 
-    return f"""SELECT round(cast(lat as numeric),2) lat, round(cast(lng as numeric),2) lng, max(lastupdate) lastupdate, max(confirmed) confirmed, max(deaths) deaths 
-    from us_daily  where  date(lastupdate)='{datey}' group by  1, 2, combinedkey
+    return f"""SELECT round(cast(k.lat as numeric),2) lat, round(cast(k.lng as numeric),2) lng, max(lastupdate) lastupdate, max(confirmed) confirmed, max(deaths) deaths 
+    from daily d left join keycoords k on k.combinedkey=d.combinedkey  where  date(lastupdate)='{datey}' group by  1, 2, k.combinedkey
     """
 
 
 def UPDATE_KEY_GEO(location, lat, lng): 
     return f"""UPDATE daily SET lng={lng}, lat={lat} WHERE combinedkey='{location}';
             UPDATE keycoords SET lng={lng}, lat={lat} WHERE combinedkey='{location}'"""
-
+# Insert into keycoords (lng, lat, combinedKey)
+#             Values ('{lng}','{lat}','{location}')
 
 

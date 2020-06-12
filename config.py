@@ -6,7 +6,7 @@ import os, base64
 
 
 settings = {
-    "covidPath": os.path.join("C:\\","Users","ian.rubenstein","repos","COVID-19","csse_covid_19_data","csse_covid_19_daily_reports_us"),
+    "covidPath": os.path.join("/Users","ian","repos","covid-19-data", "us-counties.csv"),
     "turnstilePath": os.path.join("C:\\","Users","ian.rubenstein","repos","covid-analysis","mta","turnstileUse")
 }
 print(settings['covidPath'])
