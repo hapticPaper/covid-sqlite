@@ -26,10 +26,11 @@ UPDATE daily SET combinedkey = replace(replace(case
   WHERE combinedkey is null;
   """
 
-NEW_PLACES = """
-  SELECT distinct combinedkey
-  FROM keycoords
-  WHERE lng is null or lat is null"""
+NEW_PLACES = """SELECT distinct daily.combinedKey, k.lat, k.lng
+FROM daily
+LEFT JOIN keycoords k on daily.combinedKey = k.combinedKey
+WHERE (k.lat is null or k.lng is null) AND not (lower(daily.combinedKey) like '%unknown')
+"""
 
 LAST_UPDATE = """SELECT max(date(lastupdate)) lu FROM daily"""
 
@@ -66,9 +67,8 @@ def DAILY_UPDATE(datey):
 
 
 def UPDATE_KEY_GEO(location, lat, lng): 
-    return f"""UPDATE daily SET lng={lng}, lat={lat} WHERE combinedkey='{location}';
-            UPDATE keycoords SET lng={lng}, lat={lat} WHERE combinedkey='{location}'"""
-# Insert into keycoords (lng, lat, combinedKey)
-#             Values ('{lng}','{lat}','{location}')
+    return (f"UPDATE daily SET lng={lng}, lat={lat} WHERE combinedkey='{location}';",
+           f"UPDATE keycoords SET lng={lng}, lat={lat} WHERE combinedkey='{location}';",
+           f"Insert into keycoords (lng, lat, combinedKey) Values ('{lng}','{lat}','{location}')")
 
 

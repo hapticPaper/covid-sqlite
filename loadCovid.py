@@ -54,8 +54,12 @@ def sqlExecute(conn, sql):
         try:
             r.commit()
             print("committed!")
-        except:
-            return [d for d in r]
+        except Exception as fE:
+            try:
+                return [d for d in r]
+            except:
+                print(f"{r.rowcount} rows updated")
+                return r.rowcount
     except Exception as e:
         print("Poop", e)
         return
@@ -99,9 +103,12 @@ def lookupCoords(location: str, orignalKey=None):
         resp = requests.get(f"{GMAPS_BASE}/geocode/json", params={"address":location,'key':gkey}).json()
         #print(resp['results'])
         l= resp['results'][0]['geometry']['location']
-        updates = UPDATE_KEY_GEO(orignalKey or location, l['lat'], l['lng']).split(";")
+        daily, updateKeys, insertKeys = UPDATE_KEY_GEO(orignalKey or location, l['lat'], l['lng'])
+        
+        sqlExecute(pg, daily) 
 
-        u = [sqlExecute(pg, q ) for q in updates]
+        if sqlExecute(pg, updateKeys)==0:
+            sqlExecute(pg, insertKeys) 
         return 1
     except Exception as e:
         if resp.get('status')=='ZERO_RESULTS':
@@ -154,7 +161,7 @@ create table daily
 
 if __name__=="__main__":
     loadDataPath(covidPath, pg)
-    # [lookupCoords(i) for i in getNewPlaces()]
+    print(f"{sum([lookupCoords(i) for i in getNewPlaces()])} new geo-cordinates updated")
 
     
     #loadData('StationEntrances.csv', COPY('stationEntrances'), pg)
@@ -179,7 +186,7 @@ if __name__=="__main__":
 
     imgs=[]
 
-    for dt in dates: #[-30]:
+    for dt in dates[-120:]:
         DATEY = dt
         DT = dt.replace("-","")
 
@@ -188,7 +195,7 @@ if __name__=="__main__":
 
         fig, ax1 = plt.subplots(1,1)
         plt.figure(1, (24,12))
-        ax1.scatter(covidDf.lng, covidDf.lat, sizes=covidDf.confirmed, alpha=0.1, color='#C70039')
+        ax1.scatter(covidDf.lng, covidDf.lat, sizes=covidDf.confirmed, alpha=0.1, color='#800000')
         ax1.scatter(covidDf.lng, covidDf.lat, sizes=covidDf.deaths, alpha=0.1, color='#000000')
         ax1.set_xlim(-140, -60)
         ax1.set_ylim(20, 57)
