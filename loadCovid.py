@@ -13,6 +13,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 from PIL import Image
 from IPython.display import Image as IImage
+import numpy as np
 
 from queries import  *
 from config import settings
@@ -113,7 +114,7 @@ def lookupCoords(location: str, orignalKey=None):
     except Exception as e:
         if resp.get('status')=='ZERO_RESULTS':
             print(f"Couldnt get location for {location} - {resp}")
-            updates = UPDATE_KEY_GEO(location, 0,0).split(";")
+            updates = UPDATE_KEY_GEO(location, 0,0)
             [sqlExecute(pg, q ) for q in updates]
             
         elif type(e)==KeyError:
@@ -159,9 +160,13 @@ create table daily
 
 """)
 
+def bubbleSize(number):
+    return np.log(number)*np.sqrt(number)
+
+
 if __name__=="__main__":
     loadDataPath(covidPath, pg)
-    print(f"{sum([lookupCoords(i) for i in getNewPlaces()])} new geo-cordinates updated")
+    print(f"{sum([lookupCoords(i) or 0 for i in getNewPlaces()])} new geo-cordinates updated")
 
     
     #loadData('StationEntrances.csv', COPY('stationEntrances'), pg)
@@ -195,8 +200,8 @@ if __name__=="__main__":
 
         fig, ax1 = plt.subplots(1,1)
         plt.figure(1, (24,12))
-        ax1.scatter(covidDf.lng, covidDf.lat, sizes=covidDf.confirmed, alpha=0.1, color='#800000')
-        ax1.scatter(covidDf.lng, covidDf.lat, sizes=covidDf.deaths, alpha=0.1, color='#000000')
+        ax1.scatter(covidDf.lng, covidDf.lat, sizes=bubbleSize(covidDf.confirmed), alpha=0.1, color='#800000')
+        ax1.scatter(covidDf.lng, covidDf.lat, sizes=bubbleSize(covidDf.deaths), alpha=0.1, color='#000000')
         ax1.set_xlim(-140, -60)
         ax1.set_ylim(20, 57)
         ax1.annotate(DATEY, (-135, 22))
@@ -215,11 +220,11 @@ if __name__=="__main__":
 
 
 
-    imgs[0].save(f'covid_2020.gif', 
+    imgs[0].save(f'covid_log_2020_60.gif', 
             save_all=True,
             append_images=(imgs[1:]+[imgs[-1]]*15),
             optimize=True, 
-            duration=180, 
+            duration=60, 
             loop=0)
 
     #IImage(filename="covid_2020.gif", format='png')
